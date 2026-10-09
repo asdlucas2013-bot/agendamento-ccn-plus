@@ -104,25 +104,47 @@ async function carregarAdmin(){
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 async function logoutAdmin(){await sb.auth.signOut();document.getElementById("dashboard").classList.add("hidden");document.getElementById("loginCard").classList.remove("hidden")}
-async function verificarRecuperacao(){
-  const { data } = await sb.auth.getSession();
-  if(window.location.hash.includes("type=recovery")){
-    const novaSenha = prompt("Digite sua nova senha:");
-    if(novaSenha && novaSenha.length >= 6){
-      const { error } = await sb.auth.updateUser({
-        password: novaSenha
-      });
-      if(error){
-        alert("Erro ao alterar a senha: " + error.message);
-      }else{
-        alert("Senha alterada com sucesso! Faça login com a nova senha.");
-        window.location.hash = "";
-      }
-    }else if(novaSenha !== null){
+async function verificarRecuperacao() {
+  const hash = window.location.hash;
+  const params = new URLSearchParams(hash.replace(/^#/, ""));
+  const tipo = params.get("type");
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+
+  if (tipo === "recovery" && accessToken && refreshToken) {
+    const { error: sessionError } = await sb.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    });
+
+    if (sessionError) {
+      alert("Link inválido ou expirado. Solicite outro e-mail.");
+      return;
+    }
+
+    const novaSenha = prompt("Digite sua nova senha (mínimo 6 caracteres):");
+
+    if (novaSenha === null) return;
+
+    if (novaSenha.length < 6) {
       alert("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    const { error } = await sb.auth.updateUser({
+      password: novaSenha
+    });
+
+    if (error) {
+      alert("Erro ao alterar a senha: " + error.message);
+    } else {
+      alert("Senha alterada com sucesso! Faça login com a nova senha.");
+      window.location.href =
+        "https://asdlucas2013-bot.github.io/agendamento-ccn-plus/";
     }
   }
 }
+
 verificarRecuperacao();
 </script>
 </body>
