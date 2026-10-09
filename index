@@ -104,6 +104,26 @@ async function carregarAdmin(){
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 async function logoutAdmin(){await sb.auth.signOut();document.getElementById("dashboard").classList.add("hidden");document.getElementById("loginCard").classList.remove("hidden")}
+async function verificarRecuperacao(){
+  const { data } = await sb.auth.getSession();
+  if(window.location.hash.includes("type=recovery")){
+    const novaSenha = prompt("Digite sua nova senha:");
+    if(novaSenha && novaSenha.length >= 6){
+      const { error } = await sb.auth.updateUser({
+        password: novaSenha
+      });
+      if(error){
+        alert("Erro ao alterar a senha: " + error.message);
+      }else{
+        alert("Senha alterada com sucesso! Faça login com a nova senha.");
+        window.location.hash = "";
+      }
+    }else if(novaSenha !== null){
+      alert("A senha deve ter pelo menos 6 caracteres.");
+    }
+  }
+}
+verificarRecuperacao();
 </script>
 </body>
 </html>
